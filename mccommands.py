@@ -151,59 +151,41 @@ def build_cstring(commands):
 
 def sub_build_cstring(commands):
 	if(len(commands) > 0):
-		string = 'Block:"redstone_block",Time:1,Riding:{id: FallingSand,Block:"command_block",Time:1,TileEntityData:{Command:'
+		string = 'Block:"command_block",Time:1,TileEntityData:{Command:'
 		string += str(commands.pop())
-		string += '},Riding:{id:FallingSand,'
+		string += '},Passengers:[{id:FallingSand,Block:"redstone_block",Time:1,Passengers:[{id: FallingSand,'
 		string += sub_build_cstring(commands)
-		string += '}}'
+		string += '}]}]'
 		return string
 	else:
 		return 'Block:"air",Time:1'
 
-def build_command_blocks(commands, delta, longest=False, dyspawn=0):
+def build_command_blocks(commands, delta, islastcolumn=False, dyspawn=0):
 	height = len(commands)+2
 	string = "/summon FallingSand ~{1} ~{0} ~{2} {{".format(height-dyspawn, delta[0], delta[2])
-	if(longest):
-		string += 'Block:"redstone_block",Time:1,Riding:{id:FallingSand,'
-		string += 'Block:"command_block",Time:1,TileEntityData:{Command:'
-		string += '/setblock ~{0} ~-{1} ~{2} redstone_block'.format(1, height-1, 0)
-		string += '},Riding:{id:FallingSand,'
-		string += 'Block:"sand",Time:1,Riding:{id:FallingSand,'
-	string += sub_build_command_blocks(commands)
+	
+	string += sub_build_command_blocks(commands, isfirstblock=True, islastcolumn=islastcolumn, height=height)
 	string += "}"
-	if(longest):
-		string += "}"
-		string += "}"
-		string += "}"
 	return string
 
-def sub_build_command_blocks(commands):
-	if(len(commands) > 1):
-		string = 'Block:"chain_command_block",Time:1,Data:1,TileEntityData:{Command:'
+def sub_build_command_blocks(commands, isfirstblock=False, islastcolumn=False, height=0):
+	if(len(commands) >= 1):
+		if(isfirstblock):
+			string = 'Block:"command_block",Time:1,Data:1,TileEntityData:{Command:'
+		else:
+			string = 'Block:"chain_command_block",Time:1,Data:1,TileEntityData:{Command:'
 		string += str(commands.pop())
-		string += '},Riding:{id:FallingSand,'
-		string += sub_build_command_blocks(commands)
-		string += '}'
+		string += '},Passengers:[{id:FallingSand,'
+		string += sub_build_command_blocks(commands, islastcolumn=islastcolumn, height=height)
+		string += '}]'
 		return string
-	if(len(commands) == 1):
-		return 'Block:"command_block",Time:1,Data:1,TileEntityData:{{Command:{0}}}'.format(commands.pop())
-	else:
-		return 'Block:"command_block",Time:1,Data:1,TileEntityData:{Command:/say HI}'
-
-def build_redstone_blocks(commands, offsetx, offsety):
-	height = len(commands)+2
-	string = "/summon FallingSand ~{1} ~{0} ~{2} {{".format(height, offsetx, offsety)
-	string += sub_build_redstone_blocks(commands)
-	string += "}"
-	return string
-
-def sub_build_redstone_blocks(commands):
-	if(len(commands) > 0):
-		str(commands.pop())
-		string = 'Block:"redstone_block",Time:1,Riding:{id: FallingSand,'
-		string += sub_build_redstone_blocks(commands)
-		string += '}'
-		return string
+	if(islastcolumn):
+		s = 'Block:"sand",Time:1,Passengers:[{id:FallingSand,'
+		s += 'Block:"command_block",Time:1,TileEntityData:{Command:'
+		s += '/setblock ~{0} ~-{1} ~{2} redstone_block'.format(1, height-1, 0)
+		s += '},Passengers:[{id:FallingSand,'
+		s += 'Block:"redstone_block",Time:1}]}]'
+		return s
 	else:
 		return 'Block:"air",Time:1'
 
@@ -220,7 +202,7 @@ def createCommand(commandlist, COLUMN_HEIGHT):
 
 
 	commands = []
-	longest = True
+	islastcolumn = True
 
 	delta = (0,0,1)
 	dyspawn = len(columns)*2
@@ -229,8 +211,8 @@ def createCommand(commandlist, COLUMN_HEIGHT):
 		for c in column:
 			c.mergedelta(columndelta)
 			columndelta = (columndelta[0], columndelta[1]+1, columndelta[2])
-		commands.append(build_command_blocks(column,delta,longest,dyspawn))
-		longest = False
+		commands.append(build_command_blocks(list(reversed(column)),delta,islastcolumn,dyspawn))
+		islastcolumn = False
 		delta = (delta[0], delta[1], delta[2]+1)
 		dyspawn -= 2
 
@@ -238,10 +220,10 @@ def createCommand(commandlist, COLUMN_HEIGHT):
 	clearcommand = FillCommand(0,0,0,1,max(COLUMN_HEIGHT+3, 5+(len(commands)*2)),-(len(columns)+1),"air")
 
 	e = []
-	for command in reversed(commands):
-		e.append(command)
-	e.append('/setblock ~ ~-{dy} ~{dz} command_block 1 0 {{Command: {cc}}}'.format(dy=2+(len(commands)*2), dz=len(commands)+1, cc=clearcommand))
 	e.append("/gamerule commandBlockOutput false")
+	e.append('/setblock ~ ~-{dy} ~{dz} command_block 1 0 {{Command: {cc}}}'.format(dy=1+(len(commands)*2), dz=len(commands)+1, cc=clearcommand))
+	for command in commands:
+		e.append(command)
 
 	cstring = build_cstring(e)
 
