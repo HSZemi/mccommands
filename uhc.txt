@@ -1,0 +1,102 @@
+# init #
+# ==== #
+
+# base settings
+#/difficulty normal
+#/gamerule naturalRegeneration false
+#/time set day
+#/weather clear 1000000
+#/worldborder set 2000
+#/gamerule commandBlockOutput false
+
+# spawn area
+#/setworldspawn 0 0 255
+#/fill -15 253 -15 15 255 15 minecraft:barrier 0 hollow
+#/fill -14 255 -14 14 255 14 minecraft:air
+
+# player hearts
+#/scoreboard objectives add Health health
+#/scoreboard objectives setdisplay list Health
+# update health display
+#/effect @a minecraft:instant_damage 1
+#/effect @a minecraft:instant_health 2
+
+# regen on kill
+#/scoreboard objectives add KILLS playerKillCount
+#/effect @a[score_KILLS_min=1] minecraft:regeneration 8 2
+#/scoreboard players remove @a[score_KILLS_min=1] KILLS 1
+# gm3 on death
+#/scoreboard objectives add DEATHS deathCount
+#/gamemode 3 @a[score_DEATHS_min=1]
+#/scoreboard players remove @a[score_DEATHS_min=1] DEATHS 1
+
+# teams #
+# ===== #
+
+/scoreboard teams add Alpha
+/scoreboard teams option Alpha color blue
+#/scoreboard teams join Alpha NAME
+/scoreboard teams join Alpha @r[team=,c=2]
+
+/scoreboard teams add Beta
+/scoreboard teams option Beta color blue
+#/scoreboard teams join Beta NAME
+/scoreboard teams join Beta @r[team=,c=2]
+
+/scoreboard teams add Gamma
+/scoreboard teams option Gamma color blue
+#/scoreboard teams join Gamma NAME
+/scoreboard teams join Gamma @r[team=,c=2]
+
+/scoreboard teams add Delta
+/scoreboard teams option Delta color blue
+#/scoreboard teams join Delta NAME
+/scoreboard teams join Delta @r[team=,c=2]
+
+# 0:00 #
+# ==== #
+
+/title @a title ["",{"text":"3","color":"white"}]
+/playsound minecraft:block.note.hat ambient @a
+/title @a title ["",{"text":"2","color":"white"}]
+/playsound minecraft:block.note.hat ambient @a
+/title @a title ["",{"text":"1","color":"white"}]
+/playsound minecraft:block.note.hat ambient @a
+
+/spreadplayers 0 0 200 2000 true @a
+
+/title @a title ["",{"text":"Go!","color":"dark_green","bold":"true"}]
+/playsound minecraft:block.note.pling ambient @a
+
+
+# 0:30 #
+# ==== #
+
+# message: pvp enabled
+/playsound minecraft:entity.wither.spawn ambient @a
+/title @a title ["",{"text":"PVP enabled","color":"red","bold":"true"}]
+/title @a subtitle ["",{"text":"Kill them! Kill them with fire!","color":"white"}]
+
+
+# 1:00 #
+# ==== #
+
+/worldborder set 200 7200
+/playsound minecraft:entity.lightning.thunder ambient @a 0 0 0 1 1 1
+/tellraw @a ["",{"text":"The world border is now shrinking!","color":"red"}]
+
+
+# 2:30 #
+# ==== #
+
+# eternal day
+/gamerule doDaylightCycle false
+/time set 6000
+
+# glow effect
+/title @a title ["",{"text":"Shine bright","color":"yellow","bold":"true"}]
+/title @a subtitle ["",{"text":"like a diamond","color":"yellow"}]
+/effect @a minecraft:glowing 1000000
+
+/playsound minecraft:entity.firework.twinkle ambient @a 0 0 0 1 1 1
+

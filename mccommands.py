@@ -228,3 +228,42 @@ def createCommand(commandlist, COLUMN_HEIGHT):
 	cstring = build_cstring(e)
 
 	return cstring
+
+def createCommandRaw(commandlist, COLUMN_HEIGHT):
+	# sort commands into columns
+	columns = []
+	for fromm in range(0,len(commandlist),COLUMN_HEIGHT):
+		to = min(len(commandlist), fromm+COLUMN_HEIGHT)
+		columns.append(commandlist[fromm:to])
+
+	for i in range(len(columns)):
+		columns[i].append(SetblockCommand(0,0,i+2,"redstone_block"))
+
+
+	commands = []
+	islastcolumn = True
+
+	delta = (0,0,1)
+	dyspawn = len(columns)*2
+	for column in columns:
+		columndelta = (delta[0]-1, delta[1], delta[2])
+		for i in range(len(column)-1):
+			columndelta = (columndelta[0], columndelta[1]+1, columndelta[2])
+		column[-1].mergedelta(columndelta)
+		commands.append(build_command_blocks(list(reversed(column)),delta,islastcolumn,dyspawn))
+		islastcolumn = False
+		delta = (delta[0], delta[1], delta[2]+1)
+		dyspawn -= 2
+
+
+	clearcommand = FillCommand(0,0,0,1,max(COLUMN_HEIGHT+3, 5+(len(commands)*2)),-(len(columns)+1),"air")
+
+	e = []
+	e.append("/gamerule commandBlockOutput false")
+	e.append('/setblock ~ ~-{dy} ~{dz} command_block 1 0 {{Command: {cc}}}'.format(dy=1+(len(commands)*2), dz=len(commands)+1, cc=clearcommand))
+	for command in commands:
+		e.append(command)
+
+	cstring = build_cstring(e)
+
+	return cstring
