@@ -6,6 +6,11 @@ BLACK = 15
 BROWN = 12
 GRAY = 8
 
+def escape(string):
+	string = string.replace("\\", "\\\\")
+	string = string.replace('"', '\\"')
+	return string
+
 class FillCommand:
 	def __init__(self, xfrom, yfrom, zfrom, xto, yto, zto, blocktype, numberOfPossibleOrientations="", orientation="", or_value=0, hollow=False):
 		self.xfrom = xfrom
@@ -144,16 +149,16 @@ def getOrientation6(orientation):
 
 def build_cstring(commands):
 	height = 2*len(commands)+2
-	string = "/summon FallingSand ~ ~{0} ~ {{".format(height)
+	string = "/summon falling_block ~ ~{0} ~ {{".format(height)
 	string += sub_build_cstring(commands)
 	string += "}"
 	return string
 
 def sub_build_cstring(commands):
 	if(len(commands) > 0):
-		string = 'Block:"command_block",Time:1,TileEntityData:{Command:'
-		string += str(commands.pop())
-		string += '},Passengers:[{id:FallingSand,Block:"redstone_block",Time:1,Passengers:[{id: FallingSand,'
+		string = 'Block:"command_block",Time:1,TileEntityData:{Command:"'
+		string += escape(str(commands.pop()))
+		string += '"},Passengers:[{id:falling_block,Block:"redstone_block",Time:1,Passengers:[{id: falling_block,'
 		string += sub_build_cstring(commands)
 		string += '}]}]'
 		return string
@@ -162,7 +167,7 @@ def sub_build_cstring(commands):
 
 def build_command_blocks(commands, delta, islastcolumn=False, dyspawn=0):
 	height = len(commands)+2
-	string = "/summon FallingSand ~{1} ~{0} ~{2} {{".format(height-dyspawn, delta[0], delta[2])
+	string = "/summon falling_block ~{1} ~{0} ~{2} {{".format(height-dyspawn, delta[0], delta[2])
 	
 	string += sub_build_command_blocks(commands, isfirstblock=True, islastcolumn=islastcolumn, height=height)
 	string += "}"
@@ -171,19 +176,19 @@ def build_command_blocks(commands, delta, islastcolumn=False, dyspawn=0):
 def sub_build_command_blocks(commands, isfirstblock=False, islastcolumn=False, height=0):
 	if(len(commands) >= 1):
 		if(isfirstblock):
-			string = 'Block:"command_block",Time:1,Data:1,TileEntityData:{Command:'
+			string = 'Block:"command_block",Time:1,Data:1,TileEntityData:{Command:"'
 		else:
-			string = 'Block:"chain_command_block",Time:1,Data:1,TileEntityData:{Command:'
-		string += str(commands.pop())
-		string += '},Passengers:[{id:FallingSand,'
+			string = 'Block:"chain_command_block",Time:1,Data:1,TileEntityData:{Command:"'
+		string += escape(str(commands.pop()))
+		string += '"},Passengers:[{id:falling_block,'
 		string += sub_build_command_blocks(commands, islastcolumn=islastcolumn, height=height)
 		string += '}]'
 		return string
 	if(islastcolumn):
-		s = 'Block:"sand",Time:1,Passengers:[{id:FallingSand,'
-		s += 'Block:"command_block",Time:1,TileEntityData:{Command:'
+		s = 'Block:"sand",Time:1,Passengers:[{id:falling_block,'
+		s += 'Block:"command_block",Time:1,TileEntityData:{Command:"'
 		s += '/setblock ~{0} ~-{1} ~{2} redstone_block'.format(1, height-1, 0)
-		s += '},Passengers:[{id:FallingSand,'
+		s += '"},Passengers:[{id:falling_block,'
 		s += 'Block:"redstone_block",Time:1}]}]'
 		return s
 	else:
@@ -221,7 +226,7 @@ def createCommand(commandlist, COLUMN_HEIGHT):
 
 	e = []
 	e.append("/gamerule commandBlockOutput false")
-	e.append('/setblock ~ ~-{dy} ~{dz} command_block 1 0 {{Command: {cc}}}'.format(dy=1+(len(commands)*2), dz=len(commands)+1, cc=clearcommand))
+	e.append('/setblock ~ ~-{dy} ~{dz} command_block 1 0 {{Command:" {cc}"}}'.format(dy=1+(len(commands)*2), dz=len(commands)+1, cc=escape(str(clearcommand))))
 	for command in commands:
 		e.append(command)
 
@@ -260,7 +265,7 @@ def createCommandRaw(commandlist, COLUMN_HEIGHT):
 
 	e = []
 	e.append("/gamerule commandBlockOutput false")
-	e.append('/setblock ~ ~-{dy} ~{dz} command_block 1 0 {{Command: {cc}}}'.format(dy=1+(len(commands)*2), dz=len(commands)+1, cc=clearcommand))
+	e.append('/setblock ~ ~-{dy} ~{dz} command_block 1 0 {{Command:" {cc}"}}'.format(dy=1+(len(commands)*2), dz=len(commands)+1, cc=escape(str(clearcommand))))
 	for command in commands:
 		e.append(command)
 
